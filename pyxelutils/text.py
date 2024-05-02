@@ -20,8 +20,8 @@ class InRect:
 
         self.border = 4
 
-        self.real_rect_h = h - self.border
-        self.real_rect_w = w - self.border
+        self.real_rect_h = self.h - self.border
+        self.real_rect_w = self.w - self.border
 
         self.max_lines = self.real_rect_h // self.bbox_font_h
         self.max_columns = self.real_rect_w // self.bbox_font_w
@@ -57,7 +57,6 @@ class InRect:
 
             self.mouse_drag_pos.bbox = self.edit_bbox_pos
             self.mouse_drag_pos.update()
-
             if self.mouse_drag_pos.is_dragging:
                 self.x, self.y = self.mouse_drag_pos.updated_bbox[0], self.mouse_drag_pos.updated_bbox[1]
                 self._edit_txt_pos = f"({self.x},{self.y})"
@@ -65,6 +64,13 @@ class InRect:
             self.edit_bbox_w = (self.x + (self.w + 2), self.y + self.h - 5, self.x + (self.w + 5) + (len(self._edit_txt_w) * self.bbox_font_w), self.y + self.h - 5 + self.bbox_font_h)
             self.mouse_drag_w.bbox = self.edit_bbox_w
             self.mouse_drag_w.update()
+            if self.mouse_drag_w.is_dragging:
+                self.w, self.h = self.mouse_drag_w.updated_bbox[0], self.mouse_drag_w.updated_bbox[1]
+                self.real_rect_h = self.h - self.border
+                self.real_rect_w = self.w - self.border
+                self.max_lines = self.real_rect_h // self.bbox_font_h
+                self.max_columns = self.real_rect_w // self.bbox_font_w
+                self._edit_txt_w = f"({self.x},{self.y})"
 
     def draw(self):
         if self.edit:
