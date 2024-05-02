@@ -1,63 +1,82 @@
-
 import pyxel
 
 from . import mouse
 
 
-def draw_txt_rect(x: int, y: int, w: int, h: int, txt: str, col: int=7, edit: bool=False):
-    # check minimal value for w and h
+class InRect:
+    def __init__(self, x: int, y: int, w: int, h: int, txt: str, col: int = 7, edit: bool = False):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.col = col
+        self.edit = edit
 
-    font_h = 7
-    font_w = 3
-    font_gap = 1
-    bbox_font_h = font_h + font_gap
-    bbox_font_w = font_w + font_gap
+        self.font_h = 7
+        self.font_w = 3
+        self.font_gap = 1
+        self.bbox_font_h = self.font_h + self.font_gap
+        self.bbox_font_w = self.font_w + self.font_gap
 
-    border = 4
+        self.border = 4
 
-    real_rect_h = h - border
-    real_rect_w = w - border
+        self.real_rect_h = h - self.border
+        self.real_rect_w = w - self.border
 
-    max_lines = real_rect_h // bbox_font_h
-    max_columns = real_rect_w // bbox_font_w
+        self.max_lines = self.real_rect_h // self.bbox_font_h
+        self.max_columns = self.real_rect_w // self.bbox_font_w
 
-    if edit:
-        txt_pos = f"{x} x {y}"
-        bbox_pos = (x, y -10, x + (len(txt_pos) * bbox_font_w), (y - 10) + bbox_font_h)
-        if mouse.is_inside(bbox_pos):
-            print(f"{pyxel.frame_count}: Debug inside")
+        self.txt = txt
+        self.txt_chunk = list()
 
-        mouse.draw(0)
-        pyxel.text(bbox_pos[0], bbox_pos[1], txt_pos, col)
+        self.edit_bbox_pos = (0, 0, 0, 0)
+        self._edit_txt_pos = f"({self.x},{self.y})"
+        self.mouse_drag_pos = mouse.Drag(self.edit_bbox_pos)
 
-        pyxel.text(x, y + (h + 5), f"h = {h}", col)
-        pyxel.text(x + (w + 5), y + h - 5, f"w = {w}", col)
+        self.edit_bbox_w = (0, 0, 0, 0)
+        self._edit_txt_w = f"w = {self.w}"
+        self.mouse_drag_w = mouse.Drag(self.edit_bbox_w)
 
-    txt_len = len(txt)
-    txt_chunk = []
+    def update(self):
+        txt_len = len(self.txt)
+        self.txt_chunk = list()
+        txt = self.txt
 
-    for i in range(0, txt_len, max_columns):
-        id_space = txt.rfind(' ', 0, max_columns)
-        if id_space == -1:
-            id_space = max_columns
-        if i == 0:
-            tab = '  '
-        else:
-            tab = ''
-        txt_chunk.append(tab + txt[:id_space])
-        txt = txt[id_space+1:]
-    txt_chunk.append(txt)
+        for i in range(0, txt_len, self.max_columns):
+            id_space = txt.rfind(' ', 0, self.max_columns)
+            if id_space == -1:
+                id_space = self.max_columns
+            self.txt_chunk.append(txt[:id_space])
+            txt = txt[id_space + 1:]
+        self.txt_chunk.append(txt)
 
-    pyxel.rectb(x, y, w, h, col)
-    i = 0
-    for txt in txt_chunk:
-        if i == 0:
-            pyxel.text(x + border, y + border, txt, col)
-        else:
-            pyxel.text(x + border, y + border + (i * bbox_font_h), txt, col)
-        i += 1
+        if self.edit:
+            mouse.draw(0)
+            self.edit_bbox_pos = (self.x, self.y - 12, self.x + (len(self._edit_txt_pos) * self.bbox_font_w),
+                                  (self.y - 12) + self.bbox_font_h)
 
+            self.mouse_drag_pos.bbox = self.edit_bbox_pos
+            self.mouse_drag_pos.update()
 
+            if self.mouse_drag_pos.is_dragging:
+                self.x, self.y = self.mouse_drag_pos.updated_bbox[0], self.mouse_drag_pos.updated_bbox[1]
+                self._edit_txt_pos = f"({self.x},{self.y})"
 
+            self.edit_bbox_w = (self.x + (self.w + 2), self.y + self.h - 5, self.x + (self.w + 5) + (len(self._edit_txt_w) * self.bbox_font_w), self.y + self.h - 5 + self.bbox_font_h)
+            self.mouse_drag_w.bbox = self.edit_bbox_w
+            self.mouse_drag_w.update()
 
+    def draw(self):
+        if self.edit:
+            pyxel.text(self.edit_bbox_pos[0], self.edit_bbox_pos[1] + 2, self._edit_txt_pos, self.col)
+            pyxel.text(self.x, self.y + (self.h + 5), f"h = {self.h}", self.col)
+            pyxel.text(self.edit_bbox_w[0] + 3, self.edit_bbox_w[1], self._edit_txt_w, self.col)
 
+        pyxel.rectb(self.x, self.y, self.w, self.h, self.col)
+        i = 0
+        for txt in self.txt_chunk:
+            if i == 0:
+                pyxel.text(self.x + self.border, self.y + self.border, txt, self.col)
+            else:
+                pyxel.text(self.x + self.border, self.y + self.border + (i * self.bbox_font_h), txt, self.col)
+            i += 1
