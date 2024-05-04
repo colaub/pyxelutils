@@ -1,65 +1,76 @@
 import pyxel
+import time
 
 
-def draw(col: int=0):
-    pyxel.cls(col)
-    pyxel.mouse(True)
+class Mouse:
+    def __init__(self, col=0):
+        self.click_time = 30
+        self.drag_time = 500
+        self.col = col
+        self.start_time = time.time() * 1000
+        self.pressed_time = 0
+        self.is_clicked = True
+        self.is_drag = False
+        self.clicked_mouse_x = 0
+        self.clicked_mouse_y = 0
 
+    @staticmethod
+    def is_inside(bbox):
+        if len(bbox) != 4:
+            raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
+        x_min, y_min, x_max, y_max = bbox
+        res = x_min < pyxel.mouse_x < x_max and y_min < pyxel.mouse_y < y_max
+        return res
 
-def is_inside(bbox: tuple):
-    if len(bbox) != 4:
-        raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
-    x_min, y_min, x_max, y_max = bbox
-    return x_min < pyxel.mouse_x < x_max and y_min < pyxel.mouse_y < y_max
+    def update(self):
+        if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
+            current_time = time.time() * 1000
+            self.pressed_time = current_time - self.start_time
+        else:
+            self.pressed_time = 0
+            self.start_time = time.time() * 1000
+        if self.pressed_time > self.click_time:
+            self.is_clicked = True
+            if self.pressed_time > self.drag_time and (self.clicked_mouse_x, self.clicked_mouse_y) != (pyxel.mouse_x, pyxel.mouse_y):
+                self.is_drag = True
+                self.is_clicked = False
+        else:
+            self.is_clicked = False
+            self.is_drag = False
+
+        if self.pressed_time > self.drag_time:
+            self.is_clicked = False
+        else:
+            self.is_drag = False
+
+        # must be at the end
+        if self.is_clicked:
+            self.clicked_mouse_x = pyxel.mouse_x
+            self.clicked_mouse_y = pyxel.mouse_y
+
+    def draw(self):
+        pyxel.cls(self.col)
+        pyxel.mouse(True)
 
 
 class Drag:
-    def __init__(self, bbox):
+    def __init__(self, bbox, mouse: Mouse):
+        self.mouse = mouse
         self.bbox = bbox
         self.updated_bbox = self.bbox
         if len(self.bbox) != 4:
             raise ValueError(f"Bbox must be a tuple length 4, given {self.bbox}")
-
         self.is_dragging = False
-        self.is_ready = False
+        self.was_inside = False
 
     def update(self):
-        x_min, y_min, x_max, y_max = self.bbox
-
-        if is_inside(self.bbox) and pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
+        self.mouse.update()
+        if self.mouse.is_inside(self.bbox) and self.mouse.is_clicked:
             self.is_dragging = True
-            print(f"{pyxel.frame_count}: Debug drag : inside + button")
-        elif self.is_dragging and pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
+            self.was_inside = True
+        elif self.was_inside and self.mouse.is_drag:
             self.is_dragging = True
-            print(f"{pyxel.frame_count}: Debug drag : dragging + button")
-        elif self.is_dragging and not pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
-            self.is_dragging = False
-            print(f"{pyxel.frame_count}: Debug drag : dragging + NO button")
         else:
             self.is_dragging = False
-
-        if self.is_dragging:
-            offset_x = pyxel.mouse_x - x_min
-            offset_y = pyxel.mouse_y - y_min
-            print(
-                f"{pyxel.frame_count}: Debug drag : mouse_x {pyxel.mouse_x} mouse_y {pyxel.mouse_y} x_min {x_min} y_min {y_min} offset_x {offset_x}, offset_y {offset_y}")
-            self.updated_bbox = (pyxel.mouse_x, pyxel.mouse_y, pyxel.mouse_x + x_max, pyxel.mouse_y + y_max)
-
-        # if not self.is_dragging and self.is_ready:
-        #     self.is_ready = False
-
-def drag(bbox: tuple):
-    if len(bbox) != 4:
-        raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
-    x_min, y_min, x_max, y_max = bbox
-    offset_x = 0
-    offset_y = 0
-    updated_bbox = bbox
-    if is_inside(bbox) and pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
-        offset_x = pyxel.mouse_x - x_min
-        offset_y = pyxel.mouse_y - y_min
-        print(f"{pyxel.frame_count}: Debug drag : mouse_x {pyxel.mouse_x} mouse_y {pyxel.mouse_y} x_min {x_min} y_min {y_min} offset_x {offset_x}, offset_y {offset_y}")
-        updated_bbox = (pyxel.mouse_x, pyxel.mouse_y, pyxel.mouse_x + x_max, pyxel.mouse_y + y_max)
-        return updated_bbox
-
+            self.was_inside = False
 

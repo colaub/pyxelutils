@@ -20,22 +20,25 @@ class InRect:
 
         self.border = 4
 
-        self.real_rect_h = self.h - self.border
-        self.real_rect_w = self.w - self.border
-
-        self.max_lines = self.real_rect_h // self.bbox_font_h
-        self.max_columns = self.real_rect_w // self.bbox_font_w
-
         self.txt = txt
         self.txt_chunk = list()
 
-        self.edit_bbox_pos = (0, 0, 0, 0)
-        self._edit_txt_pos = f"({self.x},{self.y})"
-        self.mouse_drag_pos = mouse.Drag(self.edit_bbox_pos)
+        if edit:
+            self.edit_bbox_pos = (0, 0, 0, 0)
+            self._edit_txt_pos = f"({self.x},{self.y})"
+            self.mouse_drag_pos = mouse.Drag(self.edit_bbox_pos, mouse.Mouse())
 
-        self.edit_bbox_w = (0, 0, 0, 0)
+            self.edit_bbox_w = (0, 0, 0, 0)
+            self.mouse_drag_w = mouse.Drag(self.edit_bbox_w, mouse.Mouse())
+
+        self.update_rect()
+
+    def update_rect(self):
+        self.real_rect_h = self.h - self.border
+        self.real_rect_w = self.w - self.border
+        self.max_lines = self.real_rect_h // self.bbox_font_h
+        self.max_columns = self.real_rect_w // self.bbox_font_w
         self._edit_txt_w = f"w = {self.w}"
-        self.mouse_drag_w = mouse.Drag(self.edit_bbox_w)
 
     def update(self):
         txt_len = len(self.txt)
@@ -51,32 +54,30 @@ class InRect:
         self.txt_chunk.append(txt)
 
         if self.edit:
-            mouse.draw(0)
-            self.edit_bbox_pos = (self.x, self.y - 12, self.x + (len(self._edit_txt_pos) * self.bbox_font_w),
-                                  (self.y - 12) + self.bbox_font_h)
-
+            self.edit_bbox_pos = (self.x - 2.5, self.y - 2.5, self.x + 5, self.y + 5)
             self.mouse_drag_pos.bbox = self.edit_bbox_pos
             self.mouse_drag_pos.update()
             if self.mouse_drag_pos.is_dragging:
-                self.x, self.y = self.mouse_drag_pos.updated_bbox[0], self.mouse_drag_pos.updated_bbox[1]
+                self.x, self.y = pyxel.mouse_x, pyxel.mouse_y
                 self._edit_txt_pos = f"({self.x},{self.y})"
 
-            self.edit_bbox_w = (self.x + (self.w + 2), self.y + self.h - 5, self.x + (self.w + 5) + (len(self._edit_txt_w) * self.bbox_font_w), self.y + self.h - 5 + self.bbox_font_h)
+            self.edit_bbox_w = (self.x + self.w - 2.5, self.y + self.h - 2.5, self.x + self.w + 4, self.y + self.h + 4)
             self.mouse_drag_w.bbox = self.edit_bbox_w
             self.mouse_drag_w.update()
             if self.mouse_drag_w.is_dragging:
-                self.w, self.h = self.mouse_drag_w.updated_bbox[0], self.mouse_drag_w.updated_bbox[1]
-                self.real_rect_h = self.h - self.border
-                self.real_rect_w = self.w - self.border
-                self.max_lines = self.real_rect_h // self.bbox_font_h
-                self.max_columns = self.real_rect_w // self.bbox_font_w
-                self._edit_txt_w = f"({self.x},{self.y})"
+                self.w, self.h = pyxel.mouse_x - self.x, pyxel.mouse_y - self.y
+                self.update_rect()
 
     def draw(self):
         if self.edit:
-            pyxel.text(self.edit_bbox_pos[0], self.edit_bbox_pos[1] + 2, self._edit_txt_pos, self.col)
+            self.mouse_drag_w.mouse.draw()
+            pyxel.text(self.x - 10, self.y - 10, self._edit_txt_pos, self.col)
+            pyxel.rectb(self.edit_bbox_pos[0], self.edit_bbox_pos[1], 5, 5, self.col)
+
+            pyxel.text(self.x + self.w + 5, self.y + self.h - 6, self._edit_txt_w, self.col)
+            pyxel.rectb(self.edit_bbox_w[0], self.edit_bbox_w[1], 5, 5, self.col)
+
             pyxel.text(self.x, self.y + (self.h + 5), f"h = {self.h}", self.col)
-            pyxel.text(self.edit_bbox_w[0] + 3, self.edit_bbox_w[1], self._edit_txt_w, self.col)
 
         pyxel.rectb(self.x, self.y, self.w, self.h, self.col)
         i = 0
