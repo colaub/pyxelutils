@@ -1,6 +1,6 @@
 import pyxel
 
-from . import mouse
+from . import mouse, timer
 
 
 class InRect:
@@ -23,7 +23,7 @@ class InRect:
 
         self.txt = txt
         self.txt_chunk = list()
-        self.txt_animated = [Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, '')]
+        self.txt_animated = [Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, '')]
         self.update_rect()
 
         if edit:
@@ -96,40 +96,49 @@ class InRect:
         pyxel.rectb(self.x, self.y, self.w, self.h, self.col)
         i = 0
         for txt in self.txt_animated:
-            if i == 0:
-                txt.x = self.x + self.border
-                txt.y = self.y + self.border
-                txt.draw()
-            else:
+            txt.x = self.x + self.border
+            txt.y = self.y + self.border + (i * self.bbox_font_h)
+            if i > 0:
                 if self.txt_animated[i-1].done:
-                    txt.x = self.x + self.border
-                    txt.y = self.y + self.border + (i * self.bbox_font_h)
                     txt.draw()
+                else:
+                    txt.reset()
+            else:
+                txt.draw()
             i += 1
 
 
 class Animated:
-    def __init__(self, x, y, txt, col=7):
+    def __init__(self, x, y, txt, col=7, speed=50):
         self.x = x
         self.y = y
         self.col = col
 
         self.txt = txt
-        self.frame_count = 0
-        self.anim_speed = 2
-        self.index_display_letter = 0
+        self.anim_speed = speed or 10
 
+        self.timer = timer.Timer()
+
+        self.reset()
+
+    def reset(self):
         self.done = False
+        self.index_display_letter = 0
+        self.frame_count = 0
+        self.timer.start()
 
     def update(self):
-        self.frame_count += 1
-        if self.frame_count >= self.anim_speed:
-            self.frame_count = 0
+        self.timer.update()
+        if self.timer.elapsed_time >= 2 / self.anim_speed:
+            self.timer.stop()
+            self.timer.start()
             self.index_display_letter += 1
             if self.index_display_letter >= len(self.txt):
                 self.index_display_letter = len(self.txt)
                 self.done = True
+                self.timer.stop()
 
     def draw(self):
         l = self.txt[:self.index_display_letter]
         pyxel.text(self.x, self.y, l, self.col)
+
