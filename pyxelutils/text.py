@@ -11,6 +11,7 @@ class InRect:
         self.h = h
         self.col = col
         self.edit = edit
+        self.anim = True
 
         self.font_h = 7
         self.font_w = 3
@@ -22,6 +23,8 @@ class InRect:
 
         self.txt = txt
         self.txt_chunk = list()
+        self.txt_animated = [Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, '')]
+        self.update_rect()
 
         if edit:
             self.edit_bbox_pos = (0, 0, 0, 0)
@@ -31,7 +34,11 @@ class InRect:
             self.edit_bbox_w = (0, 0, 0, 0)
             self.mouse_drag_w = mouse.Drag(self.edit_bbox_w, mouse.Mouse())
 
-        self.update_rect()
+        if self.anim:
+            self.index_display_letter = 0
+            self.anim_speed = 2
+            self.frame_count = 0
+
 
     def update_rect(self):
         self.real_rect_h = self.h - self.border
@@ -52,6 +59,13 @@ class InRect:
             self.txt_chunk.append(txt[:id_space])
             txt = txt[id_space + 1:]
         self.txt_chunk.append(txt)
+
+        for i, o in enumerate(self.txt_chunk):
+            self.txt_animated[i].txt = o
+            self.txt_animated[i].update()
+            if i != 0:
+                if self.txt_animated[i-1].done:
+                    self.txt_animated[i].update()
 
         if self.edit:
             self.edit_bbox_pos = (self.x - 2.5, self.y - 2.5, self.x + 5, self.y + 5)
@@ -81,9 +95,41 @@ class InRect:
 
         pyxel.rectb(self.x, self.y, self.w, self.h, self.col)
         i = 0
-        for txt in self.txt_chunk:
+        for txt in self.txt_animated:
             if i == 0:
-                pyxel.text(self.x + self.border, self.y + self.border, txt, self.col)
+                txt.x = self.x + self.border
+                txt.y = self.y + self.border
+                txt.draw()
             else:
-                pyxel.text(self.x + self.border, self.y + self.border + (i * self.bbox_font_h), txt, self.col)
+                if self.txt_animated[i-1].done:
+                    txt.x = self.x + self.border
+                    txt.y = self.y + self.border + (i * self.bbox_font_h)
+                    txt.draw()
             i += 1
+
+
+class Animated:
+    def __init__(self, x, y, txt, col=7):
+        self.x = x
+        self.y = y
+        self.col = col
+
+        self.txt = txt
+        self.frame_count = 0
+        self.anim_speed = 2
+        self.index_display_letter = 0
+
+        self.done = False
+
+    def update(self):
+        self.frame_count += 1
+        if self.frame_count >= self.anim_speed:
+            self.frame_count = 0
+            self.index_display_letter += 1
+            if self.index_display_letter >= len(self.txt):
+                self.index_display_letter = len(self.txt)
+                self.done = True
+
+    def draw(self):
+        l = self.txt[:self.index_display_letter]
+        pyxel.text(self.x, self.y, l, self.col)
