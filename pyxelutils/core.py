@@ -66,6 +66,15 @@ class Level:
         self.register = OrderedSet()
         self.name = name
 
+        self._last_name = 'rootLevel'
+
+    def __enter__(self):
+        self._last_name = BaseGame.level_manager.active_level.name
+        BaseGame.level_manager.active_level = BaseGame.level_manager.levels[self.name]
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        BaseGame.level_manager.active_level = BaseGame.level_manager.levels[self._last_name]
+
 
 class LevelManager:
     levels = {'rootLevel': Level('rootLevel')}
@@ -75,6 +84,7 @@ class LevelManager:
     def new_level(name: str):
         lvl = Level(name)
         LevelManager.levels[name] = lvl
+        return lvl
 
     @property
     def active_level(self):
@@ -86,6 +96,24 @@ class LevelManager:
             LevelManager._active_level = lvl
         else:
             raise TypeError(f"Level {lvl} doesn't exist in LevelManager")
+
+    def next(self):
+        index = list(self.levels.keys()).index(self.active_level.name) + 1
+        if len(self.levels) > index:
+            name = list(self.levels.keys())[index]
+            self.active_level = self.levels[name]
+            return True
+        else:
+            return False
+
+    def previous(self):
+        index = list(self.levels.keys()).index(self.active_level.name) - 1
+        if len(self.levels) > index >= 0:
+            name = list(self.levels.keys())[index]
+            self.active_level = self.levels[name]
+            return True
+        else:
+            return False
 
 
 class BaseGame:

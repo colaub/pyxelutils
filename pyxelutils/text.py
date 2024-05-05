@@ -3,6 +3,20 @@ import pyxel
 from . import mouse, timer, core
 
 
+class Simple(core.BaseGameObject):
+    def __init__(self, x: int, y: int, txt: str, col: int = 7):
+        self.x = x
+        self.y = y
+        self.txt = txt
+        self.col = col
+
+    def update(self):
+        pass
+
+    def draw(self):
+        pyxel.text(self.x, self.y, self.txt, self.col)
+
+
 class InRect(core.BaseGameObject):
     def __init__(self, x: int, y: int, w: int, h: int, txt: str, col: int = 7, edit: bool = False):
         self.x = x
