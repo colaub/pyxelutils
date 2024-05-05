@@ -1,9 +1,9 @@
 import pyxel
 
-from . import mouse, timer
+from . import mouse, timer, core
 
 
-class InRect:
+class InRect(core.BaseGameObject):
     def __init__(self, x: int, y: int, w: int, h: int, txt: str, col: int = 7, edit: bool = False):
         self.x = x
         self.y = y
@@ -62,10 +62,6 @@ class InRect:
 
         for i, o in enumerate(self.txt_chunk):
             self.txt_animated[i].txt = o
-            self.txt_animated[i].update()
-            if i != 0:
-                if self.txt_animated[i-1].done:
-                    self.txt_animated[i].update()
 
         if self.edit:
             self.edit_bbox_pos = (self.x - 2.5, self.y - 2.5, self.x + 5, self.y + 5)
@@ -99,24 +95,18 @@ class InRect:
             txt.x = self.x + self.border
             txt.y = self.y + self.border + (i * self.bbox_font_h)
             if i > 0:
-                if self.txt_animated[i-1].done:
-                    txt.draw()
-                else:
+                if not self.txt_animated[i-1].done:
                     txt.reset()
-            else:
-                txt.draw()
             i += 1
 
 
-class Animated:
+class Animated(core.BaseGameObject):
     def __init__(self, x, y, txt, col=7, speed=50):
         self.x = x
         self.y = y
         self.col = col
-
         self.txt = txt
         self.anim_speed = speed or 10
-
         self.timer = timer.Timer()
 
         self.reset()
@@ -139,6 +129,6 @@ class Animated:
                 self.timer.stop()
 
     def draw(self):
-        l = self.txt[:self.index_display_letter]
-        pyxel.text(self.x, self.y, l, self.col)
+        chunk_txt = self.txt[:self.index_display_letter]
+        pyxel.text(self.x, self.y, chunk_txt, self.col)
 

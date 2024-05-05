@@ -1,8 +1,9 @@
 import pyxel
 import time
+from . import core
 
 
-class Mouse:
+class Mouse(core.BaseGameObject):
     def __init__(self, col=0):
         self.click_time = 30
         self.drag_time = 500
@@ -49,11 +50,10 @@ class Mouse:
             self.clicked_mouse_y = pyxel.mouse_y
 
     def draw(self):
-        pyxel.cls(self.col)
         pyxel.mouse(True)
 
 
-class Drag:
+class Drag(core.BaseGameObject):
     def __init__(self, bbox, mouse: Mouse):
         self.mouse = mouse
         self.bbox = bbox
@@ -74,3 +74,5 @@ class Drag:
             self.is_dragging = False
             self.was_inside = False
 
+    def draw(self):
+        pass
