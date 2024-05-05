@@ -5,7 +5,9 @@ import pyxel
 class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
 
     def __init__(self):
+        # must be called at the top
         self.init_game()
+
         self.txt = text.InRect(10, 150, 237, 51,
                                "Un garbage collector est un mécanisme de gestion automatique de la mémoire qui "
                                "identifie et libère les blocs de mémoire inutilisés (garbage) afin de les réutiliser."
@@ -17,6 +19,7 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
                                "allouée aux objets qui ne sont plus référencés."
                                "allouée aux objets qui ne sont plus référencés."
                                , edit=False)
+
         def debug_txt(txt):
             """
             Add extra call at the end of original update()
@@ -28,5 +31,8 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
 
         self.txt.user_update = debug_txt
 
+        # must be called at the end or by the instance
         self.run_game()
+
+
 Game()
