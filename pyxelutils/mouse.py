@@ -23,6 +23,14 @@ class Mouse(core.BaseGameObject):
         res = x_min < pyxel.mouse_x < x_max and y_min < pyxel.mouse_y < y_max
         return res
 
+    @staticmethod
+    def clicked_inside(bbox):
+        if len(bbox) != 4:
+            raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
+        if Mouse.is_inside(bbox) and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            return True
+        return False
+
     def update(self):
         if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
             current_time = time.time() * 1000
