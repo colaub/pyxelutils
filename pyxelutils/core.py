@@ -34,8 +34,10 @@ class BaseGameObject(ABC):
         cls._base_init(cls, *args, **kwargs)
         cls.game = BaseGame
 
-    def _base_init(cls, name='baseName'):
+    def _base_init(cls, name='baseName', user_update=None, user_draw=None):
         cls.name = name
+        cls.user_update = user_update
+        cls.user_draw = user_draw
 
     @abstractmethod
     def update(self):
@@ -51,12 +53,44 @@ class BaseGameObject(ABC):
 
     @staticmethod
     def register_instance(self):
-        BaseGame.register.add(self)
+        BaseGame.register(self)
+
+
+
+class Level:
+    def __repr__(self):
+        original_repr = super().__repr__()
+        return f"{original_repr[:-1]}, {self.name})"
+
+    def __init__(self, name):
+        self.register = OrderedSet()
+        self.name = name
+
+
+class LevelManager:
+    levels = {'rootLevel': Level('rootLevel')}
+    _active_level = levels['rootLevel']
+
+    @staticmethod
+    def new_level(name: str):
+        lvl = Level(name)
+        LevelManager.levels[name] = lvl
+
+    @property
+    def active_level(self):
+        return LevelManager._active_level
+
+    @active_level.setter
+    def active_level(self, lvl):
+        if lvl.name in LevelManager.levels:
+            LevelManager._active_level = lvl
+        else:
+            raise TypeError(f"Level {lvl} doesn't exist in LevelManager")
 
 
 class BaseGame:
-    register = OrderedSet()
     instance = None
+    level_manager = LevelManager()
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -70,6 +104,10 @@ class BaseGame:
         cls.cls_color = cls_color
         BaseGame.instance = cls
 
+    @staticmethod
+    def register(obj: BaseGameObject):
+        BaseGame.level_manager.active_level.register.add(obj)
+
     def init_game(self):
         self.pyxel.init(self.w, self.h, self.name, fps=self.fps)
 
@@ -77,12 +115,16 @@ class BaseGame:
         self.pyxel.run(self.update, self.draw)
 
     def update(self):
-        for o in BaseGame.register:
+        for o in BaseGame.level_manager.active_level.register:
             o.update()
+            if o.user_update:
+                o.user_update(o)
 
     def draw(self):
         self.pyxel.cls(self.cls_color)
-        for o in BaseGame.register:
+        for o in BaseGame.level_manager.active_level.register:
             o.draw()
+            if o.user_draw:
+                o.user_draw(o)
 
 

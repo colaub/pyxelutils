@@ -17,7 +17,16 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
                                "allouée aux objets qui ne sont plus référencés."
                                "allouée aux objets qui ne sont plus référencés."
                                , edit=False)
+        def debug_txt(txt):
+            """
+            Add extra call at the end of original update()
+            Exist also for draw()
+            :param txt: the instance given as argument by the caller
+            """
+            if pyxel.frame_count > 50:
+                txt.txt = "Make a Bug!"
+
+        self.txt.user_update = debug_txt
+
         self.run_game()
-
-
 Game()
