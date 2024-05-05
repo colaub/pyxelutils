@@ -23,8 +23,15 @@ class InRect(core.BaseGameObject):
 
         self.txt = txt
         self.txt_chunk = list()
-        self.txt_animated = [Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, ''), Animated(0,0, '')]
+
         self.update_rect()
+
+        if self.edit:
+            # to have full text init Animated Text by height row of the window
+            h_rows = core.BaseGame.instance.h // self.bbox_font_h
+        else:
+            h_rows = self.max_lines
+        self.txt_animated = [Animated(0,0, '') for _ in range(h_rows)]
 
         if edit:
             self.edit_bbox_pos = (0, 0, 0, 0)
@@ -61,7 +68,8 @@ class InRect(core.BaseGameObject):
         self.txt_chunk.append(txt)
 
         for i, o in enumerate(self.txt_chunk):
-            self.txt_animated[i].txt = o
+            if i < len(self.txt_animated):
+                self.txt_animated[i].txt = o
 
         if self.edit:
             self.edit_bbox_pos = (self.x - 2.5, self.y - 2.5, self.x + 5, self.y + 5)

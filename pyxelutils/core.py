@@ -32,6 +32,7 @@ class BaseGameObject(ABC):
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
+        cls.game = BaseGame
 
     def _base_init(cls, name='baseName'):
         cls.name = name
@@ -55,6 +56,7 @@ class BaseGameObject(ABC):
 
 class BaseGame:
     register = OrderedSet()
+    instance = None
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -66,6 +68,7 @@ class BaseGame:
         cls.name = name
         cls.fps = fps
         cls.cls_color = cls_color
+        BaseGame.instance = cls
 
     def init_game(self):
         self.pyxel.init(self.w, self.h, self.name, fps=self.fps)
