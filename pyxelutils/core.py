@@ -115,6 +115,15 @@ class LevelManager:
         else:
             return False
 
+    def add_instance_object(self, o):
+        self.active_level.register.add(o)
+
+    def add_instance_objects_from_level(self, lvl):
+        if isinstance(lvl, str):
+            lvl = self.levels[lvl]
+        for o in lvl.register:
+            self.active_level.register.add(o)
+
 
 class BaseGame:
     instance = None

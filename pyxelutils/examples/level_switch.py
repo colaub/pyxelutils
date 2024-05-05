@@ -21,20 +21,20 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
         # every created objects at this indentation will be added to rootLevel
         self.pp = SwitchLevelPushBtn()
         txt = f"{self.level_manager.active_level}".split("at")[1]
-        self.txt = text.Simple((self.w / 2 - len(txt) * 2), self.h / 2, f"({txt}")
-        self.txt = text.Simple((self.w / 2 - len(txt) * 2), (self.h / 2) + 15, f'item one')
+        text.Simple((self.w / 2 - len(txt) * 2), self.h / 2, f"({txt}")
+        text.Simple((self.w / 2 - len(txt) * 2), (self.h / 2) + 15, f'item one')
 
         # create a new level, every object created in with block will be added to this level register
         with self.level_manager.new_level('level1'):
-            self.pp = SwitchLevelPushBtn()
-            txt = f"{self.level_manager.active_level}".split("at")[1]
-            self.txt = text.Simple((self.w / 2 - len(txt) * 2), self.h / 2, f"({txt}")
-            self.txt = text.Simple((self.w / 2 - len(txt) * 2), (self.h / 2) + 15, f'item two')
+            # copy instance to active level
+            self.level_manager.add_instance_object(self.pp)
 
-        # back to root level
+            # create new objects
+            txt = f"{self.level_manager.active_level}".split("at")[1]
+            text.Simple((self.w / 2 - len(txt) * 2), self.h / 2, f"({txt}")
+            text.Simple((self.w / 2 - len(txt) * 2), (self.h / 2) + 15, f'item two')
 
         # must be called at the end or by the instance
         self.run_game()
-
 
 Game()
