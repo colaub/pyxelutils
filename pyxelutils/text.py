@@ -140,7 +140,6 @@ class Animated(core.BaseGameObject):
         self.timer.start()
 
     def update(self):
-        self.timer.update()
         if self.timer.elapsed_time >= 2 / self.anim_speed:
             self.timer.stop()
             self.timer.start()

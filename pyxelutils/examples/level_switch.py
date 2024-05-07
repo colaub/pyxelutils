@@ -34,6 +34,7 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224):
             text.Simple((self.w / 2 - len(txt) * 2), self.h / 2, f"({txt}")
             text.Simple((self.w / 2 - len(txt) * 2), (self.h / 2) + 15, f'item two')
 
+        print(len(pyxel.images))
         # must be called at the end or by the instance
         self.run_game()
 

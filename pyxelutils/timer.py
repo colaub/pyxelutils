@@ -1,7 +1,8 @@
 import pyxel
+from . import core
 
 
-class Timer:
+class Timer(core.BaseGameObject):
     def __init__(self, fps=30):
         self.is_running = False
         self.start_frame = 0
@@ -23,6 +24,9 @@ class Timer:
     def update(self):
         if self.is_running:
             self.elapsed_frames = pyxel.frame_count - self.start_frame
+
+    def draw(self):
+        pass
 
     @property
     def elapsed_time(self):
