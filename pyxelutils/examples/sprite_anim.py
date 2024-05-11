@@ -11,7 +11,20 @@ class ControllerDir(core.BaseGameObject):
         self.direction = [0,0]
 
     def update(self):
-        if pyxel.btn(pyxel.KEY_LEFT):
+        self.direction = [0, 0]
+        if pyxel.btn(pyxel.KEY_UP) and pyxel.btn(pyxel.KEY_LEFT):
+            self.direction[0] = -1
+            self.direction[1] = -1
+        elif pyxel.btn(pyxel.KEY_UP) and pyxel.btn(pyxel.KEY_RIGHT):
+            self.direction[0] = 1
+            self.direction[1] = -1
+        elif pyxel.btn(pyxel.KEY_DOWN) and pyxel.btn(pyxel.KEY_LEFT):
+            self.direction[0] = -1
+            self.direction[1] = 1
+        elif pyxel.btn(pyxel.KEY_DOWN) and pyxel.btn(pyxel.KEY_RIGHT):
+            self.direction[0] = 1
+            self.direction[1] = 1
+        elif pyxel.btn(pyxel.KEY_LEFT):
             self.direction[0] = -1
         elif pyxel.btn(pyxel.KEY_RIGHT):
             self.direction[0] = 1
@@ -19,8 +32,9 @@ class ControllerDir(core.BaseGameObject):
             self.direction[1] = -1
         elif pyxel.btn(pyxel.KEY_DOWN):
             self.direction[1] = 1
-        else:
-            self.direction = [0,0]
+        elif pyxel.btn(pyxel.KEY_UP) and pyxel.btn(pyxel.KEY_LEFT):
+            self.direction[0] = -1
+            self.direction[1] = -1
 
     def draw(self):
         pass

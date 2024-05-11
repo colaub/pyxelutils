@@ -94,8 +94,8 @@ class Action(core.BaseGameObject):
     def add_sprite(self, name: str, sprite: Sprite, offset_x: int = 0, offset_y: int = 0):
         sprite.stop()
         sprite.visible = False
-        sprite.x = self.x + offset_x
-        sprite.y = self.y + offset_y
+        sprite.offset_x = offset_x
+        sprite.offset_y = offset_y
         self.sprites[name] = sprite
         if len(self.sprites) == 1:
             self.active = name
@@ -131,7 +131,5 @@ class Action(core.BaseGameObject):
     def update(self):
         self.logic()
         for sprite in self.sprites.values():
-            sprite.x = self.x
-            sprite.y = self.y
-
-
+            sprite.x = self.x + sprite.offset_x
+            sprite.y = self.y + sprite.offset_y
