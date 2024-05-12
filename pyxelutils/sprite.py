@@ -52,6 +52,7 @@ class Sprite(BaseSprite):
                 count += 1
                 if count == len(lst):
                     count = 0
+        self.generator_def = generator
 
         self.sprite_range = sprite_range
         self.fdps = frame_duration_per_sprite
@@ -60,8 +61,11 @@ class Sprite(BaseSprite):
         self.last_animated_index = next(self.index_generator)
 
         self._stop = False
+        self._play_once = False
 
     def update(self):
+        if self._play_once and self.last_animated_index == self.sprite_range[-1]:
+            return
         if not self._stop and pyxel.frame_count % self.fdps == 0:
             self.last_animated_index = next(self.index_generator)
 
@@ -72,13 +76,19 @@ class Sprite(BaseSprite):
         self.v = v
 
     def reset(self):
-        self.last_animated_index = self.sprite_range[0]
+        self.last_animated_index = self.generator_def(self.sprite_range)
+        self._play_once = False
 
     def start(self):
         self._stop = False
+        self._play_once = False
 
     def stop(self):
         self._stop = True
+
+    def play_once(self):
+        self.reset()
+        self._play_once = True
 
 
 class Action(core.BaseGameObject):
@@ -90,6 +100,8 @@ class Action(core.BaseGameObject):
         self.sprites = dict()
 
         self._active = None
+        self._move_until = ()
+        self._move_until_speed = 1
 
     def add_sprite(self, name: str, sprite: Sprite, offset_x: int = 0, offset_y: int = 0):
         sprite.stop()
@@ -131,5 +143,21 @@ class Action(core.BaseGameObject):
     def update(self):
         self.logic()
         for sprite in self.sprites.values():
-            sprite.x = self.x + sprite.offset_x
-            sprite.y = self.y + sprite.offset_y
+
+            if self._move_until:
+                if self._move_until[0] + sprite.offset_x < sprite.x:
+                    sprite.x -= self._move_until_speed
+                    self.x -= self._move_until_speed
+                elif self._move_until[0] + sprite.offset_x > sprite.x:
+                    sprite.x += self._move_until_speed
+                    self.x += self._move_until_speed
+                else:
+                    return
+
+            else:
+                sprite.x = self.x + sprite.offset_x
+                sprite.y = self.y + sprite.offset_y
+
+    def move_until(self, x, y, speed=1):
+        self._move_until = (x, y)
+        self._move_until_speed = speed

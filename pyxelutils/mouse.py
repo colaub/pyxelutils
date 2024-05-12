@@ -10,7 +10,7 @@ class Mouse(core.BaseGameObject):
         self.col = col
         self.start_time = time.time() * 1000
         self.pressed_time = 0
-        self.is_clicked = True
+        self.is_clicked = False
         self.is_drag = False
         self.clicked_mouse_x = 0
         self.clicked_mouse_y = 0
@@ -51,6 +51,9 @@ class Mouse(core.BaseGameObject):
             self.is_clicked = False
         else:
             self.is_drag = False
+
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            self.is_clicked = True
 
         # must be at the end
         if self.is_clicked:
