@@ -46,8 +46,8 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
 
         core.BaseGame.level_manager.active_level.register.change_layer(column, core.Layer.BACKGROUND)
 
-        column = sprite.Sprite(64, 0, 1, 0, 0, 32, 85,
-                                              [(0, 0)],
+        column = sprite.Sprite(64, 85-32, 1, 32, 0, 32, 32,
+                                              [(1, 0)],
                                               5, trsp_col=9)
 
         core.BaseGame.level_manager.active_level.register.change_layer(column, core.Layer.FOREGROUND)
@@ -58,8 +58,8 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
 
         core.BaseGame.level_manager.active_level.register.change_layer(column, core.Layer.BACKGROUND)
 
-        column = sprite.Sprite(64*3, 0, 1, 0, 0, 32, 85,
-                                              [(0, 0)],
+        column = sprite.Sprite(64*3, 85-32, 1, 32, 0, 32, 32,
+                                              [(1, 0)],
                                               5, trsp_col=9)
 
         core.BaseGame.level_manager.active_level.register.change_layer(column, core.Layer.FOREGROUND)
