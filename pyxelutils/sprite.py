@@ -161,3 +161,8 @@ class Action(core.BaseGameObject):
     def move_until(self, x, y, speed=1):
         self._move_until = (x, y)
         self._move_until_speed = speed
+
+    def change_layer(self, layer):
+        for s in self.sprites.values():
+            core.BaseGame.level_manager.active_level.register.change_layer(s, layer)
+

@@ -8,6 +8,12 @@ class OrderedSet:
     def add(self, item):
         self._data[item] = None
 
+    def pop_item(self, item):
+        if item in self._data:
+            k = item
+            self._data.pop(item)
+            return k
+
     def __iter__(self):
         return iter(self._data.keys())
 
@@ -22,6 +28,33 @@ class OrderedSet:
 
     def __getitem__(self, index):
         return list(self._data.keys())[index]
+
+
+class Layer:
+    FOREGROUND = 2
+    MIDDLEGROUND = 1
+    BACKGROUND = 0
+
+    def __init__(self):
+        self.foreground = OrderedSet()  # 2
+        self.middleground = OrderedSet()  # 1
+        self.background = OrderedSet()  # 0
+        self.all = OrderedSet()
+
+    def add(self, obj, layer=1):
+        if layer == 0:
+            self.background.add(obj)
+        elif layer == 1:
+            self.middleground.add(obj)
+        elif layer == 2:
+            self.foreground.add(obj)
+        else:
+            raise ValueError("Layer index doesn't exist")
+        self.all.add(obj)
+
+    def change_layer(self, obj, layer):
+        obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj)
+        self.add(obj_ref, layer)
 
 
 class BaseGameObject(ABC):
@@ -56,14 +89,13 @@ class BaseGameObject(ABC):
         BaseGame.register(self)
 
 
-
 class Level:
     def __repr__(self):
         original_repr = super().__repr__()
         return f"{original_repr[:-1]}, {self.name})"
 
     def __init__(self, name):
-        self.register = OrderedSet()
+        self.register = Layer()
         self.name = name
 
         self._last_name = 'rootLevel'
@@ -151,17 +183,30 @@ class BaseGame:
     def run_game(self):
         self.pyxel.run(self.update, self.draw)
 
+    @staticmethod
+    def _update_single(obj):
+        obj.update()
+        if obj.user_update:
+            obj.user_update(obj)
+
     def update(self):
-        for o in BaseGame.level_manager.active_level.register:
-            o.update()
-            if o.user_update:
-                o.user_update(o)
+        for o in BaseGame.level_manager.active_level.register.all:
+            self._update_single(o)
+
+    @staticmethod
+    def _draw_single(obj):
+        obj.draw()
+        if obj.user_draw:
+            obj.user_draw(obj)
 
     def draw(self):
         self.pyxel.cls(self.cls_color)
-        for o in BaseGame.level_manager.active_level.register:
-            o.draw()
-            if o.user_draw:
-                o.user_draw(o)
+        for o in BaseGame.level_manager.active_level.register.background:
+            self._draw_single(o)
+        for o in BaseGame.level_manager.active_level.register.middleground:
+            self._draw_single(o)
+        for o in BaseGame.level_manager.active_level.register.foreground:
+            self._draw_single(o)
+
 
 

@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import setuptools
-
 from pyxelutils.pyxelutils import color, core, sprite, controllers, text
 import pyxel
 
@@ -99,4 +97,6 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
 
         self.run_game()
 
-Game()
+
+if __name__ == '__main__':
+    Game()
