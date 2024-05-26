@@ -1,4 +1,12 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+from collections import defaultdict
+
+
+class Types(Enum):
+    BASE = 0
+    COLLIDER = 1
+    TRANSFORM = 2
 
 
 class OrderedSet:
@@ -7,6 +15,9 @@ class OrderedSet:
 
     def add(self, item):
         self._data[item] = None
+
+    def remove(self, item):
+        del self._data[item]
 
     def pop_item(self, item):
         if item in self._data:
@@ -28,6 +39,36 @@ class OrderedSet:
 
     def __getitem__(self, index):
         return list(self._data.keys())[index]
+
+
+class SpatialColliderGrid:
+    def __init__(self, cell_size=20):
+        self.cell_size = cell_size
+        self.grid = defaultdict(OrderedSet)
+
+    def _get_cell_coords(self, x, y):
+        return x // self.cell_size, y // self.cell_size
+
+    def update_collider(self, collider):
+        self.remove_colliders(collider)
+
+        min_cell_x, min_cell_y = self._get_cell_coords(collider.bbox[0], collider.bbox[1])
+        max_cell_x, max_cell_y = self._get_cell_coords(collider.bbox[0] + collider.w, collider.bbox[1] + collider.h)
+
+        for cell_x in range(min_cell_x, max_cell_x + 1):
+            for cell_y in range(min_cell_y, max_cell_y + 1):
+                self.grid[(cell_x, cell_y)].add(collider)
+
+    def remove_colliders(self, collider):
+        cell_coords = self._get_cell_coords(collider.bbox[0], collider.bbox[1])
+        if collider in self.grid[cell_coords]:
+            self.grid[cell_coords].remove(collider)
+        else:
+            print(f"Collider not yet in {cell_coords}")
+
+    def get_potential_colliders(self, x, y):
+        cell_coords = self._get_cell_coords(x, y)
+        return self.grid[cell_coords]
 
 
 class Layer:
@@ -58,6 +99,12 @@ class Layer:
 
 
 class BaseGameObject(ABC):
+    TYPE = Types.BASE
+
+    def __repr__(self):
+        original_repr = super().__repr__()
+        return f"{original_repr[:-1]}, {self.name}>"
+
     def __new__(cls, *args, **kwargs):
         self = super().__new__(cls)
         cls.register_instance(self)
@@ -71,6 +118,9 @@ class BaseGameObject(ABC):
         cls.name = name
         cls.user_update = user_update
         cls.user_draw = user_draw
+        cls.children = OrderedSet()
+        cls._active = True
+        cls.parent = None
 
     @abstractmethod
     def update(self):
@@ -84,15 +134,28 @@ class BaseGameObject(ABC):
     def id(cls):
         return id(cls)
 
-    @staticmethod
     def register_instance(self):
         BaseGame.register(self)
+
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        for child in self.children:
+            child.active = value
+        self._active = value
+
+    def parent_to(self, parent):
+        self.parent = parent
+        parent.children.add(self)
 
 
 class Level:
     def __repr__(self):
         original_repr = super().__repr__()
-        return f"{original_repr[:-1]}, {self.name})"
+        return f"{original_repr[:-1]}, {self.name}>"
 
     def __init__(self, name):
         self.register = Layer()
@@ -160,6 +223,8 @@ class LevelManager:
 class BaseGame:
     instance = None
     level_manager = LevelManager()
+    colliders = OrderedSet()
+    collider_grid = SpatialColliderGrid()
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -176,6 +241,8 @@ class BaseGame:
     @staticmethod
     def register(obj: BaseGameObject):
         BaseGame.level_manager.active_level.register.add(obj)
+        if obj.TYPE == Types.COLLIDER:
+            BaseGame.colliders.add(obj)
 
     def init_game(self):
         self.pyxel.init(self.w, self.h, self.name, fps=self.fps)
@@ -191,13 +258,29 @@ class BaseGame:
 
     def update(self):
         for o in BaseGame.level_manager.active_level.register.all:
-            self._update_single(o)
+            if o.active:
+                self._update_colliders(o)
+                self._update_single(o)
+
+    @staticmethod
+    def _update_colliders(obj):
+        if obj.TYPE == Types.COLLIDER:
+            # TODO : Fix Collider Grid
+            potential_colliders = BaseGame.collider_grid.get_potential_colliders(obj.bbox[0], obj.bbox[1])
+            for collider in BaseGame.colliders:
+                if collider is obj:
+                    continue
+                if collider.has_overlapping(obj):
+                    collider.overlap.add(obj)
+                elif obj in collider.overlap:
+                    collider.overlap.remove(obj)
 
     @staticmethod
     def _draw_single(obj):
-        obj.draw()
-        if obj.user_draw:
-            obj.user_draw(obj)
+        if obj.active:
+            obj.draw()
+            if obj.user_draw:
+                obj.user_draw(obj)
 
     def draw(self):
         self.pyxel.cls(self.cls_color)

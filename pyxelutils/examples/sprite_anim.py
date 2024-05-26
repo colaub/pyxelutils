@@ -8,37 +8,37 @@ class ActionWalkToClick(sprite.Action):
     def logic(self):
         if self.ctrl.pos:
             if self.x == self.ctrl.pos[0]:
-                self.active.stop()
+                self.current.stop()
             else:
                 if self.ctrl.pos[0] < self.x:
-                    self.active.flip_w = True
+                    self.current.flip_w = True
                 else:
-                    self.active.flip_w = False
-                self.active = 'side_walk'
-                self.active.start()
+                    self.current.flip_w = False
+                self.current = 'side_walk'
+                self.current.start()
                 self.move_until(self.ctrl.pos[0], self.ctrl.pos[1])
         else:
-            self.active.stop()
+            self.current.stop()
 
 
 class ActionWalk(sprite.Action):
     def logic(self):
         if self.ctrl.direction[0] < 0:
-            self.active = 'side_walk'
-            self.active.flip_w = True
-            self.active.start()
+            self.current = 'side_walk'
+            self.current.flip_w = True
+            self.current.start()
         if self.ctrl.direction[0] > 0:
-            self.active = 'side_walk'
-            self.active.flip_w = False
-            self.active.start()
+            self.current = 'side_walk'
+            self.current.flip_w = False
+            self.current.start()
         if self.ctrl.direction[1] < 0:
-            self.active = 'up_walk'
-            self.active.start()
+            self.current = 'up_walk'
+            self.current.start()
         if self.ctrl.direction[1] > 0:
-            self.active = 'down_walk'
-            self.active.start()
+            self.current = 'down_walk'
+            self.current.start()
         if self.ctrl.direction == [0,0]:
-            self.active.stop()
+            self.current.stop()
         else:
             self.x += self.ctrl.direction[0]
             self.y += self.ctrl.direction[1]
@@ -49,6 +49,18 @@ class SwitchLevelPushBtn(core.BaseGameObject):
         if pyxel.btnp(pyxel.KEY_SPACE):
             print("switch level")
             core.BaseGame.level_manager.next() or core.BaseGame.level_manager.previous()
+
+    def draw(self):
+        pass
+
+
+class ActivePushBtn(core.BaseGameObject):
+    def __init__(self, action):
+        self.action = action
+
+    def update(self):
+        if pyxel.btnp(pyxel.KEY_A):
+            self.action.active = not self.action.active
 
     def draw(self):
         pass
@@ -82,6 +94,8 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
         self.txt = text.Simple(30, 200, "SPACE BAR to switch controller")
 
         self.pp = SwitchLevelPushBtn()
+        self.ap = ActivePushBtn(self.action)
+        self.action.active = False
 
         with self.level_manager.new_level('cltr_click'):
 

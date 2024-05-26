@@ -92,6 +92,8 @@ class Sprite(BaseSprite):
 
 
 class Action(core.BaseGameObject):
+    TYPE = core.Types.TRANSFORM
+
     def __init__(self, x: int, y: int, name: str, controller):
         self.x = x
         self.y = y
@@ -99,7 +101,7 @@ class Action(core.BaseGameObject):
         self.ctrl = controller
         self.sprites = dict()
 
-        self._active = None
+        self._current = None
         self._move_until = ()
         self._move_until_speed = 1
 
@@ -110,17 +112,20 @@ class Action(core.BaseGameObject):
         sprite.offset_y = offset_y
         self.sprites[name] = sprite
         if len(self.sprites) == 1:
-            self.active = name
+            self.current = name
+        sprite.x = self.x + sprite.offset_x
+        sprite.y = self.y + sprite.offset_y
+        sprite.parent_to(self)
 
     @property
-    def active(self):
-        return self._active
+    def current(self):
+        return self._current
 
-    @active.setter
-    def active(self, name):
+    @current.setter
+    def current(self, name):
         self.invisible_all()
         self.sprites[name].visible = True
-        self._active = self.sprites[name]
+        self._current = self.sprites[name]
 
     def stop_all(self):
         for sprite in self.sprites.values():

@@ -16,7 +16,7 @@ class Mouse(core.BaseGameObject):
         self.clicked_mouse_y = 0
 
     @staticmethod
-    def is_inside(bbox):
+    def has_inside(bbox):
         if len(bbox) != 4:
             raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
         x_min, y_min, x_max, y_max = bbox
@@ -27,7 +27,7 @@ class Mouse(core.BaseGameObject):
     def clicked_inside(bbox):
         if len(bbox) != 4:
             raise ValueError(f"Bbox must be a tuple length 4, given {bbox}")
-        if Mouse.is_inside(bbox) and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+        if Mouse.has_inside(bbox) and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
             return True
         return False
 
@@ -76,7 +76,7 @@ class Drag(core.BaseGameObject):
 
     def update(self):
         self.mouse.update()
-        if self.mouse.is_inside(self.bbox) and self.mouse.is_clicked:
+        if self.mouse.has_inside(self.bbox) and self.mouse.is_clicked:
             self.is_dragging = True
             self.was_inside = True
         elif self.was_inside and self.mouse.is_drag:
