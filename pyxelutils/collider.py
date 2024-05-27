@@ -5,7 +5,7 @@ from . import core
 class Collider(core.BaseGameObject):
     TYPE = core.Types.COLLIDER
 
-    def __init__(self, x, y, w, h, relative=True, debug=False):
+    def __init__(self, x, y, w, h, relative=True, subtype=None, debug=False):
         self.bbox = (x, y, x+w, y+h)
         self.relative = relative
         self.x = x
@@ -15,9 +15,9 @@ class Collider(core.BaseGameObject):
         self.debug = debug
         self.inside = core.OrderedSet()
         self.overlap = core.OrderedSet()
+        self.subtype = subtype
 
     def update(self):
-        core.BaseGame.collider_grid.update_collider(self)
         if self.relative and self.parent:
             self.bbox = (self.parent.x + self.x,
                          self.parent.y + self.y,
@@ -43,12 +43,8 @@ class Collider(core.BaseGameObject):
 
 
 class PhysicalCollider(Collider):
-    def __init__(self, x, y, w, h, relative=True, debug=False, subtype=None):
-        super().__init__(x, y, w, h, relative=relative, debug=debug)
-        self.subtype = subtype
-
     def logic(self):
-        if self.overlap:
+        if self.overlap and pyxel.frame_count > 0:
             for obj in self.overlap:
                 if self.subtype and not isinstance(obj, self.subtype):
                     continue
@@ -68,3 +64,11 @@ class PhysicalCollider(Collider):
                 elif min_overlap == overlap_bottom:
                     obj.parent.y = self.bbox[3] - obj.y  # push out obj on the bottom
 
+
+class DestroyCollider(Collider):
+    def logic(self):
+        if self.overlap and pyxel.frame_count > 0:
+            for obj in self.overlap:
+                if self.subtype and not isinstance(obj, self.subtype):
+                    continue
+                core.BaseGame.instance.destroy(obj.parent)

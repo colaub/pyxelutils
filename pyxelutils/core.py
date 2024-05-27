@@ -1,6 +1,8 @@
+import weakref
 from abc import ABC, abstractmethod
 from enum import Enum
 from collections import defaultdict
+import gc
 
 
 class Types(Enum):
@@ -10,8 +12,11 @@ class Types(Enum):
 
 
 class OrderedSet:
-    def __init__(self):
-        self._data = dict()
+    def __init__(self, weak=True):
+        if weak:
+            self._data = weakref.WeakKeyDictionary()
+        else:
+            self._data = dict()
 
     def add(self, item):
         self._data[item] = None
@@ -24,6 +29,9 @@ class OrderedSet:
             k = item
             self._data.pop(item)
             return k
+
+    def clear(self):
+        self._data.clear()
 
     def __iter__(self):
         return iter(self._data.keys())
@@ -63,8 +71,6 @@ class SpatialColliderGrid:
         cell_coords = self._get_cell_coords(collider.bbox[0], collider.bbox[1])
         if collider in self.grid[cell_coords]:
             self.grid[cell_coords].remove(collider)
-        else:
-            print(f"Collider not yet in {cell_coords}")
 
     def get_potential_colliders(self, x, y):
         cell_coords = self._get_cell_coords(x, y)
@@ -80,7 +86,7 @@ class Layer:
         self.foreground = OrderedSet()  # 2
         self.middleground = OrderedSet()  # 1
         self.background = OrderedSet()  # 0
-        self.all = OrderedSet()
+        self.all = OrderedSet(weak=False)
 
     def add(self, obj, layer=1):
         if layer == 0:
@@ -94,12 +100,15 @@ class Layer:
         self.all.add(obj)
 
     def change_layer(self, obj, layer):
-        obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj)
+        obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj) or obj
         self.add(obj_ref, layer)
 
 
 class BaseGameObject(ABC):
     TYPE = Types.BASE
+
+    def __del__(self):
+        print(f"{self} destroyed")
 
     def __repr__(self):
         original_repr = super().__repr__()
@@ -118,9 +127,13 @@ class BaseGameObject(ABC):
         cls.name = name
         cls.user_update = user_update
         cls.user_draw = user_draw
-        cls.children = OrderedSet()
         cls._active = True
-        cls.parent = None
+        cls._parent = None
+        cls.children = None
+
+    @property
+    def parent(self):
+        return self._parent()
 
     @abstractmethod
     def update(self):
@@ -143,12 +156,15 @@ class BaseGameObject(ABC):
 
     @active.setter
     def active(self, value):
-        for child in self.children:
-            child.active = value
+        if self.children:
+            for child in self.children:
+                child.active = value
         self._active = value
 
     def parent_to(self, parent):
-        self.parent = parent
+        self._parent = weakref.ref(parent)
+        if parent.children is None:
+            parent.children = OrderedSet()
         parent.children.add(self)
 
 
@@ -224,7 +240,6 @@ class BaseGame:
     instance = None
     level_manager = LevelManager()
     colliders = OrderedSet()
-    collider_grid = SpatialColliderGrid()
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -236,6 +251,7 @@ class BaseGame:
         cls.name = name
         cls.fps = fps
         cls.cls_color = cls_color
+        cls.run_at_end = OrderedSet(weak=False)
         BaseGame.instance = cls
 
     @staticmethod
@@ -261,12 +277,14 @@ class BaseGame:
             if o.active:
                 self._update_colliders(o)
                 self._update_single(o)
+        for fn, arg in self.run_at_end:
+            fn(arg)
+        self.run_at_end.clear()
 
     @staticmethod
     def _update_colliders(obj):
         if obj.TYPE == Types.COLLIDER:
             # TODO : Fix Collider Grid
-            potential_colliders = BaseGame.collider_grid.get_potential_colliders(obj.bbox[0], obj.bbox[1])
             for collider in BaseGame.colliders:
                 if collider is obj:
                     continue
@@ -291,5 +309,30 @@ class BaseGame:
         for o in BaseGame.level_manager.active_level.register.foreground:
             self._draw_single(o)
 
+    @staticmethod
+    def _destroy(obj):
+        def rec_destroy(obj):
+            # parse level
+            for level in BaseGame.level_manager.levels.values():
+                if obj in level.register.all:
+                    level.register.all.remove(obj)
+                if obj in level.register.foreground:
+                    level.register.foreground.remove(obj)
+                if obj in level.register.middleground:
+                    level.register.middleground.remove(obj)
+                if obj in level.register.background:
+                    level.register.background.remove(obj)
+            # parse colliders
+            if obj in BaseGame.colliders:
+                BaseGame.colliders.remove(obj)
+            # parse children
+            if obj.children:
+                for child in obj.children:
+                    rec_destroy(child)
+            del obj
+        rec_destroy(obj)
 
+    @staticmethod
+    def destroy(obj):
+        BaseGame.instance.run_at_end.add((BaseGame.instance._destroy, obj))
 

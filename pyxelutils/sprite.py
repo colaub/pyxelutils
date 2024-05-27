@@ -98,6 +98,7 @@ class Action(core.BaseGameObject):
         self.x = x
         self.y = y
         self.name = name
+        controller.parent_to(self)
         self.ctrl = controller
         self.sprites = dict()
 

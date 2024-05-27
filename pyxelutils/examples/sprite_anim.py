@@ -95,7 +95,6 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
 
         self.pp = SwitchLevelPushBtn()
         self.ap = ActivePushBtn(self.action)
-        self.action.active = False
 
         with self.level_manager.new_level('cltr_click'):
 
