@@ -72,3 +72,19 @@ class DestroyCollider(Collider):
                 if self.subtype and not isinstance(obj, self.subtype):
                     continue
                 core.BaseGame.instance.destroy(obj.parent)
+
+
+class DestroyOutOfScreenCollider(Collider):
+    def __init__(self, subtype=None):
+        super().__init__(0, 0, core.BaseGame.instance.w, core.BaseGame.instance.h, relative=False, subtype=subtype)
+        self.was_overlapped = core.OrderedSet()
+
+    def logic(self):
+        if self.overlap:
+            for obj in self.overlap:
+                if self.subtype and not isinstance(obj.parent, self.subtype):
+                    continue
+                self.was_overlapped.add(obj)
+        for obj in self.was_overlapped:
+            if obj not in self.overlap:
+                core.BaseGame.instance.destroy(obj.parent)

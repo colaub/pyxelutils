@@ -9,6 +9,7 @@ class Types(Enum):
     BASE = 0
     COLLIDER = 1
     TRANSFORM = 2
+    HERO = 3
 
 
 class OrderedSet:
@@ -116,6 +117,7 @@ class BaseGameObject(ABC):
 
     def __new__(cls, *args, **kwargs):
         self = super().__new__(cls)
+        # self.__init__(*args, **kwargs)
         cls.register_instance(self)
         return self
 
@@ -148,7 +150,7 @@ class BaseGameObject(ABC):
         return id(cls)
 
     def register_instance(self):
-        BaseGame.register(self)
+        BaseGame.instance.run_at_end.add((BaseGame.register, self))
 
     @property
     def active(self):
@@ -240,6 +242,7 @@ class BaseGame:
     instance = None
     level_manager = LevelManager()
     colliders = OrderedSet()
+    heroes = OrderedSet()
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -259,6 +262,8 @@ class BaseGame:
         BaseGame.level_manager.active_level.register.add(obj)
         if obj.TYPE == Types.COLLIDER:
             BaseGame.colliders.add(obj)
+        if obj.TYPE == Types.HERO:
+            BaseGame.heroes.add(obj)
 
     def init_game(self):
         self.pyxel.init(self.w, self.h, self.name, fps=self.fps)
