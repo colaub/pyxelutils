@@ -25,9 +25,13 @@ class Collider(core.BaseGameObject):
                          self.parent.y + self.y + self.h)
         else:
             self.bbox = (self.x, self.y, self.x + self.w, self.y + self.h)
-        self.logic()
+        if self.overlap and pyxel.frame_count > 0:
+            for obj in self.overlap:
+                if self.subtype and not isinstance(obj.parent, self.subtype):
+                    continue
+                self.logic(obj)
 
-    def logic(self):
+    def logic(self, obj):
         pass
 
     def draw(self):
@@ -43,35 +47,28 @@ class Collider(core.BaseGameObject):
 
 
 class PhysicalCollider(Collider):
-    def logic(self):
+    def logic(self, obj):
         if self.overlap and pyxel.frame_count > 0:
-            for obj in self.overlap:
-                if self.subtype and not isinstance(obj, self.subtype):
-                    continue
-                overlap_left = abs(obj.bbox[2] - self.bbox[0])
-                overlap_right = abs(self.bbox[2] - obj.bbox[0])
-                overlap_top = abs(obj.bbox[3] - self.bbox[1])
-                overlap_bottom = abs(self.bbox[3] - obj.bbox[1])
+            overlap_left = abs(obj.bbox[2] - self.bbox[0])
+            overlap_right = abs(self.bbox[2] - obj.bbox[0])
+            overlap_top = abs(obj.bbox[3] - self.bbox[1])
+            overlap_bottom = abs(self.bbox[3] - obj.bbox[1])
 
-                min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
+            min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
 
-                if min_overlap == overlap_left:
-                    obj.parent.x = self.bbox[0] - obj.w - obj.x  # push out obj on the left
-                elif min_overlap == overlap_right:
-                    obj.parent.x = self.bbox[2] - obj.x  # push out obj on the right
-                elif min_overlap == overlap_top:
-                    obj.parent.y = self.bbox[1] - obj.h - obj.y  # push out obj on the top
-                elif min_overlap == overlap_bottom:
-                    obj.parent.y = self.bbox[3] - obj.y  # push out obj on the bottom
+            if min_overlap == overlap_left:
+                obj.parent.x = self.bbox[0] - obj.w - obj.x  # push out obj on the left
+            elif min_overlap == overlap_right:
+                obj.parent.x = self.bbox[2] - obj.x  # push out obj on the right
+            elif min_overlap == overlap_top:
+                obj.parent.y = self.bbox[1] - obj.h - obj.y  # push out obj on the top
+            elif min_overlap == overlap_bottom:
+                obj.parent.y = self.bbox[3] - obj.y  # push out obj on the bottom
 
 
 class DestroyCollider(Collider):
-    def logic(self):
-        if self.overlap and pyxel.frame_count > 0:
-            for obj in self.overlap:
-                if self.subtype and not isinstance(obj, self.subtype):
-                    continue
-                core.BaseGame.instance.destroy(obj.parent)
+    def logic(self, obj):
+        core.BaseGame.instance.destroy(obj.parent)
 
 
 class DestroyOutOfScreenCollider(Collider):
@@ -79,12 +76,8 @@ class DestroyOutOfScreenCollider(Collider):
         super().__init__(0, 0, core.BaseGame.instance.w, core.BaseGame.instance.h, relative=False, subtype=subtype)
         self.was_overlapped = core.OrderedSet()
 
-    def logic(self):
-        if self.overlap:
-            for obj in self.overlap:
-                if self.subtype and not isinstance(obj.parent, self.subtype):
-                    continue
-                self.was_overlapped.add(obj)
+    def logic(self, obj):
+        self.was_overlapped.add(obj)
         for obj in self.was_overlapped:
             if obj not in self.overlap:
                 core.BaseGame.instance.destroy(obj.parent)

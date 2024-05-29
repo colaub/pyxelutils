@@ -35,7 +35,7 @@ class Dog(actor.Actor):
     TYPE = core.Types.HERO
 
     def __init__(self):
-        self.life = 100
+        self.life = 5
         self.speed = 2
         self.max_speed = 8
 
@@ -55,9 +55,19 @@ class Dog(actor.Actor):
         self.action.add_sprite('up_walk', sprite_up_walk, offset_x=15)
         self.action.add_sprite('down_walk', sprite_down_walk, offset_x=15)
 
+        self.action.parent_to(self)
+
+    def is_dead(self):
+        if self.life <= 0:
+            core.BaseGame.instance.destroy(self)
+            print("IS DEAD")
+
     def logic(self):
         self.x = self.action.x
         self.y = self.action.y
+
+        self.is_dead()
+
 
 
 class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):

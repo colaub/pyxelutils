@@ -135,7 +135,8 @@ class BaseGameObject(ABC):
 
     @property
     def parent(self):
-        return self._parent()
+        if self._parent:
+            return self._parent()
 
     @abstractmethod
     def update(self):
@@ -330,6 +331,9 @@ class BaseGame:
             # parse colliders
             if obj in BaseGame.colliders:
                 BaseGame.colliders.remove(obj)
+            # heroes
+            if obj in BaseGame.heroes:
+                BaseGame.heroes.remove(obj)
             # parse children
             if obj.children:
                 for child in obj.children:
@@ -339,5 +343,6 @@ class BaseGame:
 
     @staticmethod
     def destroy(obj):
+        obj.active = False
         BaseGame.instance.run_at_end.add((BaseGame.instance._destroy, obj))
 
