@@ -125,13 +125,47 @@ class BaseGameObject(ABC):
         cls._base_init(cls, *args, **kwargs)
         cls.game = BaseGame
 
-    def _base_init(cls, name='baseName', user_update=None, user_draw=None):
+    def _base_init(cls, name='baseName', user_update=None, user_draw=None, x=0, y=0):
         cls.name = name
         cls.user_update = user_update
         cls.user_draw = user_draw
         cls._active = True
         cls._parent = None
         cls.children = None
+        cls._x = x
+        cls._x_offset = 0
+        cls._y = y
+        cls._y_offset = 0
+
+    @property
+    def x(self):
+        if self.parent:
+            return self.parent.x + self._x
+        else:
+            return self._x
+
+    @x.setter
+    def x(self, value):
+        self._x = value
+
+    @property
+    def y(self):
+        if self.parent:
+            return self.parent.y + self._y
+        else:
+            return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+
+    @property
+    def world_position(self):
+        return self.x, self.y
+
+    @property
+    def local_position(self):
+        return self._x, self._y
 
     @property
     def parent(self):

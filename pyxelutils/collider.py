@@ -5,9 +5,7 @@ from . import core
 class Collider(core.BaseGameObject):
     TYPE = core.Types.COLLIDER
 
-    def __init__(self, x, y, w, h, relative=True, subtype=None, debug=False):
-        self.bbox = (x, y, x+w, y+h)
-        self.relative = relative
+    def __init__(self, x, y, w, h, subtype=None, debug=False):
         self.x = x
         self.y = y
         self.w = w
@@ -17,14 +15,12 @@ class Collider(core.BaseGameObject):
         self.overlap = core.OrderedSet()
         self.subtype = subtype
 
+        self.bbox = (self.x, self.y, self.x + self.w, self.y + self.h)
+
     def update(self):
-        if self.relative and self.parent:
-            self.bbox = (self.parent.x + self.x,
-                         self.parent.y + self.y,
-                         self.parent.x + self.x + self.w,
-                         self.parent.y + self.y + self.h)
-        else:
-            self.bbox = (self.x, self.y, self.x + self.w, self.y + self.h)
+        self.bbox = (self.x, self.y,
+                     self.x + self.w,
+                     self.y + self.h)
         if self.overlap and pyxel.frame_count > 0:
             for obj in self.overlap:
                 if self.subtype and not isinstance(obj.parent, self.subtype):
@@ -73,7 +69,7 @@ class DestroyCollider(Collider):
 
 class DestroyOutOfScreenCollider(Collider):
     def __init__(self, subtype=None):
-        super().__init__(0, 0, core.BaseGame.instance.w, core.BaseGame.instance.h, relative=False, subtype=subtype)
+        super().__init__(0, 0, core.BaseGame.instance.w, core.BaseGame.instance.h, subtype=subtype)
         self.was_overlapped = core.OrderedSet()
 
     def logic(self, obj):

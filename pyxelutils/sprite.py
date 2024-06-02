@@ -117,6 +117,7 @@ class Action(core.BaseGameObject):
         sprite.x = self.x + sprite.offset_x
         sprite.y = self.y + sprite.offset_y
         sprite.parent_to(self)
+        sprite.name = name
 
     @property
     def current(self):
@@ -159,10 +160,6 @@ class Action(core.BaseGameObject):
                     self.x += self._move_until_speed
                 else:
                     return
-
-            else:
-                sprite.x = self.x + sprite.offset_x
-                sprite.y = self.y + sprite.offset_y
 
     def move_until(self, x, y, speed=1):
         self._move_until = (x, y)

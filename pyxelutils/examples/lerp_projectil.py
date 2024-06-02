@@ -13,7 +13,7 @@ class Bullet(core.BaseGameObject):
         self.y = y
         self.target_pos = (self.x, self.y)
         self.lp = None
-        self.speed = 6
+        self.speed = 4
         cl = collider.Collider(-self.size, -self.size, self.size + 4,self.size + 4, debug=False)
         cl.parent_to(self)
 
@@ -51,8 +51,6 @@ class Spawn(core.BaseGameObject):
         if core.BaseGame.heroes and self.ammo and pyxel.frame_count % self.spawn_rate == 0:
             bullet = Bullet(self.x, self.y)
             bullet.name = f'bullet{pyxel.frame_count}'
-            bullet.size = random.randint(2, 9)
-            bullet.speed = random.randint(4, 11)
             target_pos = (core.BaseGame.heroes[0].x, core.BaseGame.heroes[0].y)
             bullet.target_pos = target_pos
             bullet.fire()
@@ -78,7 +76,7 @@ class Game(core.BaseGame, pyxel=pyxel, w=256, h=224, cls_color=1):
         pyxel.images[0].load(0, 0, f'{Path(__file__).parent}/resources/walk.png')
 
         dog = dog_actor.Dog()
-        spw = Spawn(256, 224, 1000, 10)
+        spw = Spawn(256, 224, 1000, 4)
         SpawnBtn(spw)
 
         collider.DestroyOutOfScreenCollider(subtype=Bullet)

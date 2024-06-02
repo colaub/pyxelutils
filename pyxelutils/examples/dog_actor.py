@@ -8,6 +8,7 @@ class ActionWalk(sprite.Action):
     def __init__(self, x: int, y: int, name: str, controller, dog):
         super().__init__(x, y, name, controller)
         self.dog = dog
+        self.name = 'dogAction'
 
     def logic(self):
         if self.ctrl.direction[0] < 0:
@@ -24,11 +25,11 @@ class ActionWalk(sprite.Action):
         if self.ctrl.direction[1] > 0:
             self.current = 'down_walk'
             self.current.start()
-        if self.ctrl.direction == [0,0]:
+        if self.ctrl.direction == [0, 0]:
             self.current.stop()
         else:
-            self.x += self.ctrl.direction[0] * self.dog.speed
-            self.y += self.ctrl.direction[1] * self.dog.speed
+            self.dog.x += self.ctrl.direction[0] * self.dog.speed
+            self.dog.y += self.ctrl.direction[1] * self.dog.speed
 
 
 class Dog(actor.Actor):
@@ -57,14 +58,16 @@ class Dog(actor.Actor):
 
         self.action.parent_to(self)
 
+        self.name = 'dog'
+
     def is_dead(self):
         if self.life <= 0:
             core.BaseGame.instance.destroy(self)
             print("IS DEAD")
 
     def logic(self):
-        self.x = self.action.x
-        self.y = self.action.y
+        # self.x = self.action.x
+        # self.y = self.action.y
 
         self.is_dead()
 

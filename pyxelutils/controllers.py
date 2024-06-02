@@ -7,6 +7,7 @@ from . import mouse as mouse_utils
 class DirectionalKeysCtrl(core.BaseGameObject):
     def __init__(self):
         self.direction = [0,0]
+        self.name = 'directionCtrl'
 
     def update(self):
         self.direction = [0, 0]
