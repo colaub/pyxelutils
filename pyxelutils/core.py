@@ -103,6 +103,9 @@ class Layer:
     def change_layer(self, obj, layer):
         obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj) or obj
         self.add(obj_ref, layer)
+        for o in obj.children:
+            obj_ref = self.foreground.pop_item(o) or self.middleground.pop_item(o) or self.background.pop_item(o) or o
+            self.add(obj_ref, layer)
 
 
 class BaseGameObject(ABC):
@@ -136,6 +139,7 @@ class BaseGameObject(ABC):
         cls._x_offset = 0
         cls._y = y
         cls._y_offset = 0
+        cls.instance_at_end = False
 
     @property
     def x(self):
@@ -185,7 +189,10 @@ class BaseGameObject(ABC):
         return id(cls)
 
     def register_instance(self):
-        BaseGame.instance.run_at_end.add((BaseGame.register, self))
+        if self.instance_at_end:
+            BaseGame.instance.run_at_end.add((BaseGame.register, self))
+        else:
+            BaseGame.register(self)
 
     @property
     def active(self):
@@ -269,7 +276,7 @@ class LevelManager:
     def add_instance_objects_from_level(self, lvl):
         if isinstance(lvl, str):
             lvl = self.levels[lvl]
-        for o in lvl.register:
+        for o in lvl.register.all:
             self.active_level.register.add(o)
 
 

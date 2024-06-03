@@ -23,9 +23,9 @@ class Collider(core.BaseGameObject):
                      self.y + self.h)
         if self.overlap and pyxel.frame_count > 0:
             for obj in self.overlap:
-                if self.subtype and not isinstance(obj.parent, self.subtype):
-                    continue
-                self.logic(obj)
+                if self.subtype:
+                    if isinstance(obj.parent, self.subtype):
+                        self.logic(obj)
 
     def logic(self, obj):
         pass
@@ -67,13 +67,29 @@ class DestroyCollider(Collider):
         core.BaseGame.instance.destroy(obj.parent)
 
 
-class DestroyOutOfScreenCollider(Collider):
+class OutOfScreenCollider(Collider):
     def __init__(self, subtype=None):
         super().__init__(0, 0, core.BaseGame.instance.w, core.BaseGame.instance.h, subtype=subtype)
         self.was_overlapped = core.OrderedSet()
 
+    def update(self):
+        self.bbox = (self.x, self.y,
+                     self.x + self.w,
+                     self.y + self.h)
+        if self.overlap and pyxel.frame_count > 0:
+            for obj in self.overlap:
+                if self.subtype and not isinstance(obj.parent, self.subtype):
+                    continue
+                self.was_overlapped.add(obj)
+                for obj in self.was_overlapped:
+                    if obj not in self.overlap:
+                        self.logic(obj)
+
+
+class DestroyOutOfScreenCollider(OutOfScreenCollider):
+    def __init__(self, subtype=None):
+        super().__init__(subtype=subtype)
+        self.was_overlapped = core.OrderedSet()
+
     def logic(self, obj):
-        self.was_overlapped.add(obj)
-        for obj in self.was_overlapped:
-            if obj not in self.overlap:
-                core.BaseGame.instance.destroy(obj.parent)
+        core.BaseGame.instance.destroy(obj.parent)

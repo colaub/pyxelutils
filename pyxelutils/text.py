@@ -6,12 +6,24 @@ from . import mouse, timer, core
 class Simple(core.BaseGameObject):
     def __init__(self, x: int, y: int, txt: str, col: int = 7):
         self.x = x
+        self.pos_x = x
+        self.pos_y = y
         self.y = y
         self.txt = txt
         self.col = col
+        self.font_h = 7
+        self.font_w = 3
+
+        self.center = False
 
     def update(self):
-        pass
+        if self.center:
+            offset_x = len(self.txt) * self.font_w
+            offset_y = self.font_w
+            self.x = self.pos_x
+            self.y = self.pos_y
+            self.x = self.x - (offset_x // 2 + len(self.txt) // 2)
+            self.y = self.y - (offset_y // 2)
 
     def draw(self):
         pyxel.text(self.x, self.y, self.txt, self.col)

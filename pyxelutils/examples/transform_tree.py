@@ -11,7 +11,7 @@ class Circle(core.BaseGameObject):
         self.y = y
 
     def update(self):
-        print(self.name, self.world_position, self.local_position)
+        print(self.name, 'world :', self.world_position, 'local :', self.local_position)
 
     def draw(self):
         pyxel.circ(self.x, self.y, 4, 5)
