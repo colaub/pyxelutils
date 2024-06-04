@@ -338,7 +338,7 @@ class BaseGame:
                 if collider.has_overlapping(obj):
                     collider.overlap.add(obj)
                 elif obj in collider.overlap:
-                    collider.overlap.remove(obj)
+                    BaseGame.instance.run_at_end.add((collider.overlap.remove, obj))
 
     @staticmethod
     def _draw_single(obj):
