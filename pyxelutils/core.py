@@ -1,4 +1,6 @@
 import weakref
+import copy
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from collections import defaultdict
@@ -99,6 +101,17 @@ class Layer:
         else:
             raise ValueError("Layer index doesn't exist")
         self.all.add(obj)
+
+    def remove(self, obj, layer=1):
+        if layer == 0:
+            self.background.remove(obj)
+        elif layer == 1:
+            self.middleground.remove(obj)
+        elif layer == 2:
+            self.foreground.remove(obj)
+        else:
+            raise ValueError("Layer index doesn't exist")
+        self.all.remove(obj)
 
     def change_layer(self, obj, layer):
         obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj) or obj
@@ -271,7 +284,10 @@ class LevelManager:
             return False
 
     def add_instance_object(self, o):
-        self.active_level.register.add(o)
+        BaseGame.instance.run_at_end.add((self.active_level.register.add, o))
+
+    def remove_instance_object(self, o):
+        BaseGame.instance.run_at_end.add((self.active_level.register.add, o))
 
     def add_instance_objects_from_level(self, lvl):
         if isinstance(lvl, str):
@@ -285,6 +301,7 @@ class BaseGame:
     level_manager = LevelManager()
     colliders = OrderedSet()
     heroes = OrderedSet()
+    _last_copy = None
 
     def __init_subclass__(cls, *args, **kwargs):
         cls._base_init(cls, *args, **kwargs)
@@ -298,6 +315,12 @@ class BaseGame:
         cls.cls_color = cls_color
         cls.run_at_end = OrderedSet(weak=False)
         BaseGame.instance = cls
+
+    @staticmethod
+    def get_last_copy():
+        last = BaseGame._last_copy
+        BaseGame._last_copy = None
+        return last
 
     @staticmethod
     def register(obj: BaseGameObject):
@@ -387,3 +410,11 @@ class BaseGame:
         obj.active = False
         BaseGame.instance.run_at_end.add((BaseGame.instance._destroy, obj))
 
+    @staticmethod
+    def _copy(obj):
+        obj2 = copy.deepcopy(obj)
+        BaseGame._last_copy = obj2
+
+    @staticmethod
+    def copy(obj):
+        BaseGame.instance.run_at_end.add((BaseGame._copy, obj))
