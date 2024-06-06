@@ -92,26 +92,36 @@ class Layer:
         self.all = OrderedSet(weak=False)
 
     def add(self, obj, layer=1):
-        if layer == 0:
-            self.background.add(obj)
-        elif layer == 1:
-            self.middleground.add(obj)
-        elif layer == 2:
-            self.foreground.add(obj)
-        else:
-            raise ValueError("Layer index doesn't exist")
-        self.all.add(obj)
+        def _add(obj, layer):
+            if layer == 0:
+                self.background.add(obj)
+            elif layer == 1:
+                self.middleground.add(obj)
+            elif layer == 2:
+                self.foreground.add(obj)
+            else:
+                raise ValueError("Layer index doesn't exist")
+            self.all.add(obj)
+            if obj.children:
+                for c in obj.children:
+                    _add(c, layer)
+        _add(obj, layer)
 
     def remove(self, obj, layer=1):
-        if layer == 0:
-            self.background.remove(obj)
-        elif layer == 1:
-            self.middleground.remove(obj)
-        elif layer == 2:
-            self.foreground.remove(obj)
-        else:
-            raise ValueError("Layer index doesn't exist")
-        self.all.remove(obj)
+        def _remove(obj, layer):
+            if layer == 0:
+                self.background.remove(obj)
+            elif layer == 1:
+                self.middleground.remove(obj)
+            elif layer == 2:
+                self.foreground.remove(obj)
+            else:
+                raise ValueError("Layer index doesn't exist")
+            self.all.remove(obj)
+            if obj.children:
+                for c in obj.children:
+                    _remove(c, layer)
+        _remove(obj, layer)
 
     def change_layer(self, obj, layer):
         obj_ref = self.foreground.pop_item(obj) or self.middleground.pop_item(obj) or self.background.pop_item(obj) or obj

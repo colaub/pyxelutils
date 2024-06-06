@@ -52,12 +52,14 @@ class InRect(core.BaseGameObject):
 
         self.update_rect()
 
+        self.finished = False
+
         if self.edit:
             # to have full text init Animated Text by height row of the window
             h_rows = core.BaseGame.instance.h // self.bbox_font_h
         else:
             h_rows = self.max_lines
-        self.txt_animated = [Animated(0,0, '') for _ in range(h_rows)]
+        self.txt_animated = [Animated(0,0, '', col=self.col) for _ in range(h_rows)]
 
         if edit:
             self.edit_bbox_pos = (0, 0, 0, 0)
@@ -71,7 +73,6 @@ class InRect(core.BaseGameObject):
             self.index_display_letter = 0
             self.anim_speed = 2
             self.frame_count = 0
-
 
     def update_rect(self):
         self.real_rect_h = self.h - self.border
@@ -132,6 +133,8 @@ class InRect(core.BaseGameObject):
                 if not self.txt_animated[i-1].done:
                     txt.reset()
             i += 1
+        if all(txt.done for txt in self.txt_animated):
+            self.finished = True
 
 
 class Animated(core.BaseGameObject):
