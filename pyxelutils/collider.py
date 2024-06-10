@@ -26,6 +26,7 @@ class Collider(core.BaseGameObject):
                 if self.subtype:
                     if isinstance(obj.parent, self.subtype):
                         self.logic(obj)
+                        core.BaseGame.instance.run_at_end.add((self.overlap.remove, obj))
 
     def logic(self, obj):
         pass

@@ -60,6 +60,9 @@ class InRect(core.BaseGameObject):
         else:
             h_rows = self.max_lines
         self.txt_animated = [Animated(0,0, '', col=self.col) for _ in range(h_rows)]
+        for a in self.txt_animated:
+            a.inherit_transform = False
+            a.parent_to(self)
 
         if edit:
             self.edit_bbox_pos = (0, 0, 0, 0)

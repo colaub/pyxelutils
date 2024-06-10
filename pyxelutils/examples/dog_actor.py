@@ -35,21 +35,22 @@ class ActionWalk(sprite.Action):
 class Dog(actor.Actor):
     TYPE = core.Types.HERO
 
-    def __init__(self):
+    def __init__(self, img_bank=0):
         self.life = 5
         self.speed = 2
         self.max_speed = 8
+        self.img_bank = img_bank
 
         ctrl = controllers.DirectionalKeysCtrl()
         self.action = ActionWalk(self.x, self.y, 'dogWalk', ctrl, self)
 
-        sprite_side_walk = sprite.Sprite(0, 0, 0, 0, 0, 64, 32,
+        sprite_side_walk = sprite.Sprite(0, 0, self.img_bank, 0, 0, 64, 32,
                                          [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)],
                                          self.max_speed // self.speed or 1, trsp_col=9)
-        sprite_up_walk = sprite.Sprite(0, 0, 0, 0, 0, 32, 32,
+        sprite_up_walk = sprite.Sprite(0, 0, self.img_bank, 0, 0, 32, 32,
                                        [(0, 2), (1, 2), (2, 2), (0, 3), (1, 3)],
                                        self.max_speed // self.speed or 1, trsp_col=9)
-        sprite_down_walk = sprite.Sprite(0, 0, 0, 0, 0, 32, 32,
+        sprite_down_walk = sprite.Sprite(0, 0, self.img_bank, 0, 0, 32, 32,
                                          [(3, 2), (4, 2), (5, 2), (3, 3), (4, 3), (5, 3)],
                                          self.max_speed // self.speed or 1, trsp_col=9)
         self.action.add_sprite('side_walk', sprite_side_walk)

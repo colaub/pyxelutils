@@ -1,10 +1,10 @@
 import weakref
 import copy
+import threading
 
 from abc import ABC, abstractmethod
 from enum import Enum
 from collections import defaultdict
-import gc
 
 
 class Types(Enum):
@@ -32,6 +32,9 @@ class OrderedSet:
             k = item
             self._data.pop(item)
             return k
+
+    def pop(self):
+        return self._data.pop(0)
 
     def clear(self):
         self._data.clear()
@@ -163,10 +166,11 @@ class BaseGameObject(ABC):
         cls._y = y
         cls._y_offset = 0
         cls.instance_at_end = False
+        cls.inherit_transform = True
 
     @property
     def x(self):
-        if self.parent:
+        if self.parent and self.inherit_transform:
             return self.parent.x + self._x
         else:
             return self._x
@@ -177,7 +181,7 @@ class BaseGameObject(ABC):
 
     @property
     def y(self):
-        if self.parent:
+        if self.parent and self.inherit_transform:
             return self.parent.y + self._y
         else:
             return self._y
@@ -216,6 +220,9 @@ class BaseGameObject(ABC):
             BaseGame.instance.run_at_end.add((BaseGame.register, self))
         else:
             BaseGame.register(self)
+
+    def activate(self, value):
+        self.active = value
 
     @property
     def active(self):
@@ -306,6 +313,35 @@ class LevelManager:
             self.active_level.register.add(o)
 
 
+class RunAtEnd:
+    waiting_queue = OrderedSet(weak=False)
+    queue = OrderedSet(weak=False)
+
+    def add(self, value):
+        self.queue.add(value)
+        # if value not in self.queue:
+        #     self.waiting_queue.add(value)
+
+    def remove(self, value):
+        self.queue.remove(value)
+        # self.waiting_queue.remove(value)
+
+    def turn_over(self):
+        self.queue.clear()
+        for o in self.waiting_queue:
+            self.queue.add(o)
+        self.waiting_queue.clear()
+
+    def call(self):
+        for fn, args in self.queue:
+            print(f"call {fn}, {args}")
+            if args is None:
+                fn()
+            else:
+                fn(args)
+        self.queue.clear()
+
+
 class BaseGame:
     instance = None
     level_manager = LevelManager()
@@ -323,7 +359,7 @@ class BaseGame:
         cls.name = name
         cls.fps = fps
         cls.cls_color = cls_color
-        cls.run_at_end = OrderedSet(weak=False)
+        cls.run_at_end = RunAtEnd()
         BaseGame.instance = cls
 
     @staticmethod
@@ -357,9 +393,7 @@ class BaseGame:
             if o.active:
                 self._update_colliders(o)
                 self._update_single(o)
-        for fn, arg in self.run_at_end:
-            fn(arg)
-        self.run_at_end.clear()
+        self.run_at_end.call()
 
     @staticmethod
     def _update_colliders(obj):
@@ -370,8 +404,6 @@ class BaseGame:
                     continue
                 if collider.has_overlapping(obj):
                     collider.overlap.add(obj)
-                elif obj in collider.overlap:
-                    BaseGame.instance.run_at_end.add((collider.overlap.remove, obj))
 
     @staticmethod
     def _draw_single(obj):
@@ -428,3 +460,10 @@ class BaseGame:
     @staticmethod
     def copy(obj):
         BaseGame.instance.run_at_end.add((BaseGame._copy, obj))
+
+    @staticmethod
+    def run_at_end_with_delay(arg, delay=10):
+        def _run_with_delay(arg):
+            BaseGame.instance.run_at_end.add(arg)
+        t = threading.Timer(delay, _run_with_delay, args=(arg,))
+        t.start()
